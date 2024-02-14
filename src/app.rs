@@ -5,18 +5,11 @@ use leptos_router::*;
 
 #[component]
 pub fn App() -> impl IntoView {
-    // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
     view! {
-        // injects a stylesheet into the document <head>
-        // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/moderato.css"/>
-
-        // sets the document title
-        <Title text="Welcome to Leptos"/>
-
-        // content for this welcome page
+        <Title text="Moderato"/>
         <Router fallback=|| {
             let mut outside_errors = Errors::default();
             outside_errors.insert_with_default_key(AppError::NotFound);
@@ -34,15 +27,39 @@ pub fn App() -> impl IntoView {
     }
 }
 
-/// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-    // Creates a reactive value to update the button
-    let (count, set_count) = create_signal(0);
-    let on_click = move |_| set_count.update(|count| *count += 1);
+    let score = create_resource(|| (), |_| async move { get_score().await });
+    let win_action = create_action(move |_: &()| async move {
+        score.set(register_win().await);
+    });
+    let submitting_win = win_action.pending();
 
     view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <h1>Moderato</h1>
+        <Suspense fallback=move || view! { <p>Loading...</p> }>
+            <h2>Score: {score}</h2>
+            <div>
+                <button>Try again</button>
+                <button on:click=move |_| win_action.dispatch(()) disabled={submitting_win}>Won</button>
+            </div>
+        </Suspense>
     }
+}
+
+#[server(RegisterWin, "/api")]
+pub async fn register_win() -> Result<i32, ServerFnError> {
+    use crate::db;
+
+    let mut current_score = db::scores::get();
+    current_score += 1;
+    db::scores::set(current_score);
+    Ok(current_score)
+}
+
+#[server(GetScore, "/api", "GetJson")]
+pub async fn get_score() -> Result<i32, ServerFnError> {
+    use crate::db;
+
+    Ok(db::scores::get())
 }
