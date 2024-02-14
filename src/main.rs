@@ -5,7 +5,11 @@ async fn main() {
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use moderato::app::*;
+    use moderato::db;
     use moderato::fileserv::file_and_error_handler;
+
+    db::migrate();
+    db::scores::init();
 
     // Setting get_configuration(None) means we'll be using cargo-leptos's env values
     // For deployment these variables are:
