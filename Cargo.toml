@@ -23,6 +23,7 @@ http = "1"
 diesel = { version = "2.1.4", features = ["sqlite"], optional = true }
 dotenv = { version = "0.15.0", optional = true }
 diesel_migrations = { version = "2.1.0", optional = true }
+rand = "0.8.5"
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]

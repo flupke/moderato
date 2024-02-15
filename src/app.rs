@@ -1,4 +1,7 @@
-use crate::error_template::{AppError, ErrorTemplate};
+use crate::{
+    error_template::{AppError, ErrorTemplate},
+    instructions::random_instructions,
+};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -34,14 +37,18 @@ fn HomePage() -> impl IntoView {
         score.set(register_win().await);
     });
     let submitting_win = win_action.pending();
+    let instructions = create_resource(|| (), |_| async move { random_instructions() });
 
     view! {
         <h1>Moderato</h1>
-        <Suspense fallback=move || view! { <p>Loading...</p> }>
+        <Suspense fallback=move || view! { <p>Chargement...</p> }>
             <h2>Score: {score}</h2>
             <div>
-                <button>Try again</button>
-                <button on:click=move |_| win_action.dispatch(()) disabled={submitting_win}>Won</button>
+                <p>{instructions}</p>
+            </div>
+            <div>
+                <button on:click=move |_| instructions.set(random_instructions())>Réessayer</button>
+                <button on:click=move |_| win_action.dispatch(()) disabled={submitting_win}>Gagné</button>
             </div>
         </Suspense>
     }
