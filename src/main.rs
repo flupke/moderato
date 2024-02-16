@@ -8,7 +8,6 @@ async fn main() {
     use moderato::db;
     use moderato::fileserv::file_and_error_handler;
 
-    db::migrate();
     db::scores::init();
 
     // Setting get_configuration(None) means we'll be using cargo-leptos's env values

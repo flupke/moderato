@@ -6,6 +6,12 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "migrate-db"
+required-features = ["ssr"]
+test = false
+bench = false
+
 [dependencies]
 axum = { version = "0.7", optional = true }
 console_error_panic_hook = "0.1"
@@ -115,3 +121,7 @@ lib-default-features = false
 #
 # Optional. Defaults to "release".
 lib-profile-release = "wasm-release"
+
+# Required because there are two binaries output by this conf (the server and
+# the DB migration binary)
+bin-target = "moderato"
