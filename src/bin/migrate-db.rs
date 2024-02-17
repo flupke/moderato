@@ -1,5 +1,8 @@
 use moderato::db;
 
 pub fn main() {
-    db::migrate();
+    match db::migrate() {
+        Ok(_) => println!("Database migrated"),
+        Err(error) => println!("Error migrating database: {}", error),
+    }
 }

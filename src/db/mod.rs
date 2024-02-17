@@ -19,8 +19,7 @@ pub fn establish_connection() -> SqliteConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub fn migrate() {
-    establish_connection()
-        .run_pending_migrations(MIGRATIONS)
-        .expect("Migration failed");
+pub fn migrate() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    establish_connection().run_pending_migrations(MIGRATIONS)?;
+    Ok(())
 }
