@@ -33,11 +33,12 @@ pub fn App() -> impl IntoView {
 #[component]
 fn HomePage() -> impl IntoView {
     let score = create_resource(|| (), |_| async move { get_score().await });
+    let instructions = create_resource(|| (), |_| async move { random_instructions() });
     let win_action = create_action(move |_: &()| async move {
         score.set(register_win().await);
+        instructions.set(random_instructions());
     });
     let submitting_win = win_action.pending();
-    let instructions = create_resource(|| (), |_| async move { random_instructions() });
 
     view! {
         <h1>Moderato</h1>
@@ -47,7 +48,7 @@ fn HomePage() -> impl IntoView {
                 <p>{instructions}</p>
             </div>
             <div>
-                <button on:click=move |_| instructions.set(random_instructions())>Réessayer</button>
+                <button on:click=move |_| instructions.set(random_instructions()) disabled={submitting_win}>Réessayer</button>
                 <button on:click=move |_| win_action.dispatch(()) disabled={submitting_win}>Gagné</button>
             </div>
         </Suspense>
