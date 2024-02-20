@@ -30,6 +30,7 @@ diesel = { version = "2.1.4", features = ["sqlite"], optional = true }
 dotenv = { version = "0.15.0", optional = true }
 diesel_migrations = { version = "2.1.0", optional = true }
 rand = "0.8.5"
+leptos-use = { version = "0.10.2", features = ["serde_json", "serde"] }
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
@@ -42,6 +43,7 @@ ssr = [
   "leptos/ssr",
   "leptos_meta/ssr",
   "leptos_router/ssr",
+  "leptos-use/ssr",
   "dep:tracing",
   "dep:diesel",
   "dep:diesel_migrations",

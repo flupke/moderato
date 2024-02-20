@@ -1,4 +1,7 @@
-use rand::seq::{IteratorRandom, SliceRandom};
+use rand::{
+    seq::{IteratorRandom, SliceRandom},
+    RngCore,
+};
 
 fn random_hand_instructions() -> String {
     let mut rng = rand::thread_rng();
@@ -43,7 +46,7 @@ fn random_clothes_color_question() -> String {
     )
 }
 
-pub fn random_instructions() -> String {
+pub fn random_instructions(count: u8) -> Vec<(u64, String)> {
     let mut rng = rand::thread_rng();
     let funcs = [
         random_hand_instructions,
@@ -51,5 +54,7 @@ pub fn random_instructions() -> String {
         random_addition,
         random_clothes_color_question,
     ];
-    funcs.choose(&mut rng).unwrap()()
+    (0..count)
+        .map(|_| (rng.next_u64(), funcs.choose(&mut rng).unwrap()()))
+        .collect::<Vec<_>>()
 }
