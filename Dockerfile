@@ -34,7 +34,7 @@ RUN cargo leptos build --release -vv
 # -----------------------------------------------
 # Runner
 
-FROM rustlang/rust:nightly-bullseye as runner
+FROM rustlang/rust:nightly-bullseye-slim as runner
 WORKDIR /app
 
 # Install LiteFS
