@@ -54,7 +54,20 @@ pub fn random_instructions(count: u8) -> Vec<(u64, String)> {
         random_addition,
         random_clothes_color_question,
     ];
-    (0..count)
-        .map(|_| (rng.next_u64(), funcs.choose(&mut rng).unwrap()()))
-        .collect::<Vec<_>>()
+
+    let mut instructions_list = Vec::new();
+    loop {
+        let instruction = funcs.choose(&mut rng).unwrap()();
+        if !instructions_list.contains(&instruction) {
+            instructions_list.push(instruction);
+        }
+        if instructions_list.len() == count as usize {
+            break;
+        }
+    }
+
+    instructions_list
+        .into_iter()
+        .map(|instruction| (rng.next_u64(), instruction))
+        .collect()
 }
