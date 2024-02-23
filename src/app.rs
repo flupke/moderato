@@ -23,6 +23,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="" view=HomePage/>
+                    <Route path="admin" view=AdminPage/>
                 </Routes>
             </main>
         </Router>
@@ -99,6 +100,35 @@ fn InstructionsList(instructions: ReadSignal<Vec<(u64, String)>>) -> impl IntoVi
     }
 }
 
+#[component]
+fn AdminPage() -> impl IntoView {
+    let score = create_resource(|| (), |_| async move { get_score().await });
+    let reset_score = create_action(move |_: &()| async move {
+        if let Ok(true) =
+            window().confirm_with_message("Êtes vous sûr de vouloir remettre le score à zéro ?")
+        {
+            match set_score().await {
+                Ok(_) => score.set(Ok(0)),
+                Err(error) => {
+                    window()
+                        .alert_with_message(&format!("Erreur: {:?}", error))
+                        .ok();
+                }
+            };
+        }
+    });
+
+    view! {
+        <h1>Admin</h1>
+        <Suspense fallback=move || view! { <p>Chargement...</p> }>
+            <div>
+                <p>Current score: {score}</p>
+                <button on:click=move |_| reset_score.dispatch(())>Reset score</button>
+            </div>
+        </Suspense>
+    }
+}
+
 #[server(RegisterWin, "/api")]
 pub async fn register_win() -> Result<i32, ServerFnError> {
     use crate::db;
@@ -114,4 +144,11 @@ pub async fn get_score() -> Result<i32, ServerFnError> {
     use crate::db;
 
     Ok(db::scores::get())
+}
+
+#[server(SetScore, "/api")]
+pub async fn set_score() -> Result<(), ServerFnError> {
+    use crate::db;
+    db::scores::set(0);
+    Ok(())
 }
