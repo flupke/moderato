@@ -1,12 +1,10 @@
 use crate::{
     error_template::{AppError, ErrorTemplate},
-    instructions::random_instructions,
+    pages::{AdminPage, HomePage},
 };
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use leptos_use::storage::use_local_storage;
-use leptos_use::utils::JsonCodec;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -28,127 +26,4 @@ pub fn App() -> impl IntoView {
             </main>
         </Router>
     }
-}
-
-#[component]
-fn HomePage() -> impl IntoView {
-    let (instructions_count, set_instructions_count, _) =
-        use_local_storage::<u8, JsonCodec>("instructions-count");
-
-    if instructions_count.get_untracked() == 0 {
-        set_instructions_count(1);
-    }
-
-    let (instructions, set_instructions) = create_signal(Vec::new());
-    let score = create_resource(|| (), |_| async move { get_score().await });
-    let win_action = create_action(move |_: &()| async move {
-        score.set(register_win().await);
-        set_instructions(random_instructions(instructions_count.get_untracked()));
-    });
-    let submitting_win = win_action.pending();
-
-    create_effect(move |_| {
-        set_instructions(random_instructions(instructions_count()));
-    });
-
-    view! {
-        <h1>Moderato</h1>
-        <Suspense fallback=move || view! { <p>Chargement...</p> }>
-            <h2>Score: {score}</h2>
-            <div>
-                Nombre dinstructions
-                <input
-                    type="number"
-                    min=1
-                    max=4
-                    value=instructions_count
-                    on:change=move |event| {
-                        let value = event_target_value(&event).parse().unwrap_or(1);
-                        set_instructions_count(value);
-                    }
-                />
-
-            </div>
-            <div>
-                <InstructionsList instructions/>
-            </div>
-            <div>
-                <button
-                    on:click=move |_| set_instructions(random_instructions(instructions_count()))
-                    disabled=submitting_win
-                >
-                    Réessayer
-                </button>
-                <button on:click=move |_| win_action.dispatch(()) disabled=submitting_win>
-                    Gagné
-                </button>
-            </div>
-        </Suspense>
-    }
-}
-
-#[component]
-fn InstructionsList(instructions: ReadSignal<Vec<(u64, String)>>) -> impl IntoView {
-    view! {
-        <For
-            each=instructions
-            key=|item| item.0
-            children=move |(_, instruction)| {
-                view! { <p>{instruction}</p> }
-            }
-        />
-    }
-}
-
-#[component]
-fn AdminPage() -> impl IntoView {
-    let score = create_resource(|| (), |_| async move { get_score().await });
-    let reset_score = create_action(move |_: &()| async move {
-        if let Ok(true) =
-            window().confirm_with_message("Êtes vous sûr de vouloir remettre le score à zéro ?")
-        {
-            match set_score().await {
-                Ok(_) => score.set(Ok(0)),
-                Err(error) => {
-                    window()
-                        .alert_with_message(&format!("Erreur: {:?}", error))
-                        .ok();
-                }
-            };
-        }
-    });
-
-    view! {
-        <h1>Admin</h1>
-        <Suspense fallback=move || view! { <p>Chargement...</p> }>
-            <div>
-                <p>Current score: {score}</p>
-                <button on:click=move |_| reset_score.dispatch(())>Reset score</button>
-            </div>
-        </Suspense>
-    }
-}
-
-#[server(RegisterWin, "/api")]
-pub async fn register_win() -> Result<i32, ServerFnError> {
-    use crate::db;
-
-    let mut current_score = db::scores::get();
-    current_score += 1;
-    db::scores::set(current_score);
-    Ok(current_score)
-}
-
-#[server(GetScore, "/api", "GetJson")]
-pub async fn get_score() -> Result<i32, ServerFnError> {
-    use crate::db;
-
-    Ok(db::scores::get())
-}
-
-#[server(SetScore, "/api")]
-pub async fn set_score() -> Result<(), ServerFnError> {
-    use crate::db;
-    db::scores::set(0);
-    Ok(())
 }
